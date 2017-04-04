@@ -1,0 +1,24 @@
+{
+  "name": "rstmpw/ibmmq",
+  "description": "PHP client for IBM WebSphere MQ",
+  "keywords": ["ibm", "websphere", "mq", "mqseries"],
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "RSTM Team",
+      "email": "team@rstm.pw"
+    }
+  ],
+  "require": {
+    "php": "^7.0"
+  },
+  "suggest": {
+    "ext-mqseries": "To actually use this library, you'll have to install the PECL extension mqseries"
+  },
+  "autoload": {
+    "psr-4": {
+      "rstmpw\\ibmmq\\": "src/"
+    }
+  }
+}
