@@ -2,7 +2,7 @@
 
 ## Установка
 ```bash
-composer require rstmpw/ibmmq:^1
+composer require rstmpw/ibmmq:^1 
 ```
 
 Либо в файл composer.json проекта добавить следующую информацию (нехороший способ):
