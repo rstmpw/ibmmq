@@ -1,4 +1,4 @@
-# IBM MQ - библиотека для взаимодействия с IBM WebSphere MQ
+# IBM MQ - PHP библиотека для взаимодействия с IBM WebSphere MQ
 
 ## Установка
 ```bash
