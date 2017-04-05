@@ -165,13 +165,13 @@ class MQClient {
 
     public function begin() {
         if($this->inTransaction)
-            throw new LogicException ('Try to open nested transaction - not supported');
+            throw new RuntimeException ('Try to open nested transaction - not supported');
         $this->inTransaction = true;
     }
 
     public function commit() {
         if(!$this->inTransaction)
-            throw new LogicException ('Try to commit not opened transaction');
+            throw new RuntimeException ('Try to commit not opened transaction');
 
         $CC = $RC = null;
         mqseries_cmit(
@@ -190,7 +190,7 @@ class MQClient {
 
     public function rollback() {
         if(!$this->inTransaction)
-            throw new LogicException ('Try to rollback not opened transaction');
+            throw new RuntimeException ('Try to rollback not opened transaction');
 
         $CC = $RC = null;
         mqseries_back(

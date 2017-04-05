@@ -6,7 +6,7 @@ composer require rstmpw/ibmmq
 ```
 
 ## Использование
-Функции могут выбрасывать исключение \RuntimeException, \LogicException или 
+Функции могут выбрасывать \RuntimeException или \InvalidArgumentException 
 
 ### Получение/отправка сообщений из очереди
 ```php
