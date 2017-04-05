@@ -17,17 +17,17 @@ use rstmpw\ibmmq\MQClient;
 use rstmpw\ibmmq\MQMessage;
 
 // Функция-помощник для формирования правильной структуры параметров подключения.
-// Если используется внешнее хранилище параметров подклчений, то там следует хранить уже
+// Если используется внешнее хранилище параметров подключений, то там следует хранить уже
 // сформированную структуру.
-$mqConnOpts = MQClient::makeConnOpts('SITE_QM', '172.18.0.7', '41414');
+$mqConnOpts = MQClient::makeConnOpts('QM.NAME', '172.18.0.7', '1414');
 
 // Соединяемся с сервером
 $mqServer = new MQClient($mqConnOpts);
 
 // Открываем очередь
-$mqQueue = $mqServer->openQueue('KS_VV_IN');
+$mqQueue = $mqServer->openQueue('QUEUE.NAME');
 // Для удаленных очередей:
-// $mqOueue = $mqServer->openQueue('VV_KS_OUT', [MQSERIES_MQOO_FAIL_IF_QUIESCING, MQSERIES_MQOO_OUTPUT]);
+// $mqOueue = $mqServer->openQueue('REMOTE.QUEUE.NAME', [MQSERIES_MQOO_FAIL_IF_QUIESCING, MQSERIES_MQOO_OUTPUT]);
 
 // Создаем сообщение и отправляем его в очередь
 $outMessage = new MQMessage('Somebody message '.time());
@@ -54,13 +54,13 @@ unset($mqServer);
 use rstmpw\ibmmq\MQClient;
 use rstmpw\ibmmq\MQMessage;
 
-$mqConnOpts = MQClient::makeConnOpts('SITE_QM', '172.18.0.7', '41414');
+$mqConnOpts = MQClient::makeConnOpts('QM.NAME', '172.18.0.7', '1414');
 $mqServer = new MQClient($mqConnOpts);
 
 // Создаем сообщение
 $outMessage = new MQMessage('Somebody message '.time());
 
-$mqServer->put1($outMessage, 'KS_VV_IN');
+$mqServer->put1($outMessage, 'QUEUE.NAME');
 echo "\n msgId: ".$outMessage->property('MsgId');
 ```
 
@@ -72,10 +72,10 @@ echo "\n msgId: ".$outMessage->property('MsgId');
 use rstmpw\ibmmq\MQClient;
 use rstmpw\ibmmq\MQMessage;
 
-$mqConnOpts = MQClient::makeConnOpts('SITE_QM', '172.18.0.7', '41414');
+$mqConnOpts = MQClient::makeConnOpts('QM.NAME', '172.18.0.7', '1414');
 $mqServer = new MQClient($mqConnOpts);
 
-$mqQueue = $mqServer->openQueue('KS_VV_IN');
+$mqQueue = $mqServer->openQueue('QUEUE.NAME');
 
 // Устанавливаем опции получения сообщения и выборки
 $getOpts = [
@@ -105,20 +105,20 @@ unset($mqServer);
 use rstmpw\ibmmq\MQClient;
 use rstmpw\ibmmq\MQMessage;
 
-$mqConnOpts = MQClient::makeConnOpts('SITE_QM', '172.18.0.7', '41414');
+$mqConnOpts = MQClient::makeConnOpts('QM.NAME', '172.18.0.7', '1414');
 $mqServer = new MQClient($mqConnOpts);
 
 // Создаем сообщение и устнавливаем свойства
 $outMessage = new MQMessage('Somebody message '.time());
 $outMessage->property('Priority', 7);
-$outMessage->property('ReplyToQ', 'RESPONSE_QUEUE');
-$outMessage->property('ReplyToQMgr', 'RESPONSE_QM');
+$outMessage->property('ReplyToQ', 'RESPONSE.QUEUE');
+$outMessage->property('ReplyToQMgr', 'RESPONSE.QM');
 
 // Отправляем сообщение
-$mqServer->put1($outMessage, 'KS_VV_IN');
+$mqServer->put1($outMessage, 'QUEUE.NAME');
 
 // Получаем сообщение и смотрим свойства
-$mqQueue = $mqServer->openQueue('KS_VV_IN');
+$mqQueue = $mqServer->openQueue('QUEUE.NAME');
 $inMessage = $mqQueue->get();
 echo "\n Data: ".$inMessage->data();
 echo "\n msgId: ".$inMessage->property('MsgId');
@@ -136,7 +136,7 @@ echo "\n ReplyToQMgr: ".$inMessage->property('ReplyToQMgr');
 use rstmpw\ibmmq\MQClient;
 use rstmpw\ibmmq\MQMessage;
 
-$mqConnOpts = MQClient::makeConnOpts('SITE_QM', '172.18.0.7', '41414');
+$mqConnOpts = MQClient::makeConnOpts('QM.NAME', '172.18.0.7', '1414');
 $mqServer = new MQClient($mqConnOpts);
 
 // Открываем топик
@@ -152,7 +152,7 @@ $mqQueue->put($outMessage);
 use rstmpw\ibmmq\MQClient;
 use rstmpw\ibmmq\MQMessage;
 
-$mqConnOpts = MQClient::makeConnOpts('SITE_QM', '172.18.0.7', '41414');
+$mqConnOpts = MQClient::makeConnOpts('QM.NAME', '172.18.0.7', '1414');
 $mqServer = new MQClient($mqConnOpts);
 
 // Создаем сообщение и публикуем его в топик
@@ -167,37 +167,37 @@ $mqServer->put1($outMessage, 'TOPIC::news/sport/nascar/winners/top/1');
 use rstmpw\ibmmq\MQClient;
 use rstmpw\ibmmq\MQMessage;
 
-$mqConnOpts = MQClient::makeConnOpts('SITE_QM', '172.18.0.7', '41414');
+$mqConnOpts = MQClient::makeConnOpts('QM.NAME', '172.18.0.7', '1414');
 $mqServer = new MQClient($mqConnOpts);
 
 // Отправляем 2 сообщения вне транзакции
 $outMessage = new MQMessage('Put message w/o transaction');
-$mqServer->put1($outMessage, 'VV_INF_IN');
-$mqServer->put1($outMessage, 'VV_INF_IN');
+$mqServer->put1($outMessage, 'OTHER.QUEUE.NAME');
+$mqServer->put1($outMessage, 'OTHER.QUEUE.NAME');
 
 // Открывем транзакцию
 $mqServer->begin();
 
-// Получаем сообщение из очереди VV_INF_IN
-$mqQueue = $mqServer->openQueue('VV_INF_IN');
+// Получаем сообщение из очереди OTHER.QUEUE.NAME
+$mqQueue = $mqServer->openQueue('OTHER.QUEUE.NAME');
 $mqQueue->get();
 
-// Отправляем сообщение в очередь KS_VV_IN с использованием put1
-$mqServer->put1(new MQMessage('MSG1'), 'KS_VV_IN');
+// Отправляем сообщение в очередь QUEUE.NAME с использованием put1
+$mqServer->put1(new MQMessage('MSG1'), 'QUEUE.NAME');
 
-// Отправляем еще 2 сообщения в очередь KS_VV_IN и одно оттуда забираем через явное открытие очереди
-$mqQueueOut = $mqServer->openQueue('KS_VV_IN');
+// Отправляем еще 2 сообщения в очередь QUEUE.NAME и одно оттуда забираем через явное открытие очереди
+$mqQueueOut = $mqServer->openQueue('QUEUE.NAME');
 $mqQueueOut->put(new MQMessage('MSG2'));
 $mqQueueOut->put(new MQMessage('MSG2'));
 $mqQueueOut->get();
 
 // Фиксируем транзакцию
 $mqServer->commit();
-// Если считать, что перед запуском скрипта очереди были путые, то в итоге в очереди VV_INF_IN будет одно сообщение,
-// a в очереди KS_VV_IN - 2 сообщения.
+// Если считать, что перед запуском скрипта очереди были путые, то в итоге в очереди OTHER.QUEUE.NAME будет одно сообщение,
+// a в очереди QUEUE.NAME - 2 сообщения.
 // Если явным образом откатить транзакцию
 // $mqServer->rollback();
-// или явно ее не закоммитить, то в очереди VV_INF_IN будет 2 сообщения, а KS_VV_IN останется пустой.
+// или явно ее не закоммитить, то в очереди OTHER.QUEUE.NAME будет 2 сообщения, а QUEUE.NAME останется пустой.
 ```
 
 ## Зависимости
