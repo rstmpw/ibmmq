@@ -64,8 +64,6 @@ $mqServer->put1($outMessage, 'QUEUE.NAME');
 echo "\n msgId: ".$outMessage->property('MsgId');
 ```
 
-Для получения сообщений есть аналог в виде get1('QUEUE.NAME')
-
 ### Получение сообщений из очереди с ожиданием и выборкой по CorrelId
 ```php
 <?php

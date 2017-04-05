@@ -135,11 +135,20 @@ class MQClient {
             ];
         }
 
-        if($MQMessage->property('MsgId') === false && !array_search(MQSERIES_MQPMO_NEW_MSG_ID, $putParams['Options']))
+        if( $MQMessage->property('MsgId') === false && !(
+                isset($putParams['Options']) &&
+                array_search(MQSERIES_MQPMO_NEW_MSG_ID, $putParams['Options'])
+            )
+        )
             $putParams['Options'][] = MQSERIES_MQPMO_NEW_MSG_ID;
 
-        if($this->inTransaction && !array_search(MQSERIES_MQPMO_SYNCPOINT, $putParams['Options']))
-            $putParams['Options'][] = MQSERIES_MQPMO_SYNCPOINT;
+        if( $this->MQClient->inTransaction && !(
+                isset($putParams['Options']) &&
+                array_search(MQSERIES_MQGMO_SYNCPOINT, $putParams['Options'])
+            )
+        ) {
+            $putParams['Options'][] = MQSERIES_MQGMO_SYNCPOINT;
+        }
 
         $MQMD = $MQMessage->getPropsArray();
         $putParams['Options'] = array_reduce($putParams['Options'], function($res, $cur) { return $res | $cur; }, 0);
