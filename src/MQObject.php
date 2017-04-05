@@ -13,6 +13,7 @@ class MQObject {
     private $openParams=null;
     private $bufferLen=4194304;
 
+    //TODO Add length attrs
     private $INQCharAttrs = [
         MQSERIES_MQCA_ALTERATION_DATE,
         MQSERIES_MQCA_ALTERATION_TIME,
@@ -122,7 +123,7 @@ class MQObject {
             $putParams['Options'][] = MQSERIES_MQGMO_SYNCPOINT;
         }
 
-        $MQMD = $MQMessage->getRawProps();
+        $MQMD = $MQMessage->getPropsArray();
         $putParams['Options'] = array_reduce($putParams['Options'], function($res, $cur) { return $res | $cur; }, 0);
 
         $CC = $RC = null;
@@ -140,7 +141,7 @@ class MQObject {
             throw new RuntimeException(mqseries_strerror($RC), $RC);
         }
 
-        $MQMessage->setRawProps($MQMD);
+        $MQMessage->setPropsArray($MQMD);
         return $this;
     }
 
@@ -181,7 +182,7 @@ class MQObject {
         }
 
         $Message = new MQMessage($MessageData);
-        $Message->setRawProps($MQMD);
+        $Message->setPropsArray($MQMD);
         return $Message;
     }
 

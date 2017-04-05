@@ -141,7 +141,7 @@ class MQClient {
         if($this->inTransaction && !array_search(MQSERIES_MQPMO_SYNCPOINT, $putParams['Options']))
             $putParams['Options'][] = MQSERIES_MQPMO_SYNCPOINT;
 
-        $MQMD = $MQMessage->getRawProps();
+        $MQMD = $MQMessage->getPropsArray();
         $putParams['Options'] = array_reduce($putParams['Options'], function($res, $cur) { return $res | $cur; }, 0);
 
         $CC = $RC = null;
@@ -159,7 +159,7 @@ class MQClient {
             throw new RuntimeException(mqseries_strerror($RC), $RC);
         }
 
-        $MQMessage->setRawProps($MQMD);
+        $MQMessage->setPropsArray($MQMD);
         return $this;
     }
 

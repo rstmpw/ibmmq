@@ -16,6 +16,10 @@ class MQMessage
         'MsgId' => false
     ];
 
+    private $propetiesList = [
+        //TODO Describe all properties and MD versions
+    ];
+
     public function __construct($data)
     {
         $this->messageData=$data;
@@ -39,18 +43,19 @@ class MQMessage
 
             return $this->MQMD[$name];
         }
-        $this->setRawProps([$name => $value]);
+        $this->setPropsArray([$name => $value]);
     }
 
-    public function setRawProps(array $props)
+    public function setPropsArray(array $props)
     {
         foreach($props as $pName => $pVal) {
+            //TODO Check property name in $this->propetiesList and adjust MD version
             //TODO Если устанавливаемое свойство относится к более выской версии MQMD, то надо автоматически поднимать версию
             $this->MQMD[$pName]=$pVal;
         }
     }
 
-    public function getRawProps() {
+    public function getPropsArray() {
         return $this->MQMD;
     }
 }
