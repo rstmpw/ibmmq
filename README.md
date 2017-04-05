@@ -2,20 +2,11 @@
 
 ## Установка
 ```bash
-composer require rstmpw/ibmmq:^1 
-```
-
-Либо в файл composer.json проекта добавить следующую информацию (нехороший способ):
-```json
-{
-  "require": {
-    "rstmpw/ibmmq": "^1"
-  }
-}
+composer require rstmpw/ibmmq
 ```
 
 ## Использование
-Функции могут выбрасывать исключение \RuntimeException
+Функции могут выбрасывать исключение \RuntimeException, \LogicException или 
 
 ### Получение/отправка сообщений из очереди
 ```php
