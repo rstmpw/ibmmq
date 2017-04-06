@@ -3,7 +3,6 @@
 namespace rstmpw\ibmmq;
 
 use \RuntimeException;
-use \LogicException;
 
 class MQClient {
     private static $defQueueOpenOpts = [
@@ -142,7 +141,7 @@ class MQClient {
         )
             $putParams['Options'][] = MQSERIES_MQPMO_NEW_MSG_ID;
 
-        if( $this->MQClient->inTransaction && !(
+        if( $this->inTransaction && !(
                 isset($putParams['Options']) &&
                 array_search(MQSERIES_MQGMO_SYNCPOINT, $putParams['Options'])
             )
