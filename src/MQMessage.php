@@ -10,7 +10,7 @@ class MQMessage
         'Expiry' => MQSERIES_MQEI_UNLIMITED,
         'Report' => MQSERIES_MQRO_NONE,
         'MsgType' => MQSERIES_MQMT_DATAGRAM,
-        'Format' => MQSERIES_MQFMT_STRING,
+        'Format' => MQSERIES_MQFMT_NONE,
         'Priority' => 0,
         'Persistence' => MQSERIES_MQPER_PERSISTENT,
         'MsgId' => false
