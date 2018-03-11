@@ -4,8 +4,8 @@ namespace rstmpw\ibmmq;
 
 class MQMessage
 {
-    private $messageData=null;
-    private $MQMD = [
+    protected $messageData;
+    protected $MQMD = [
         'Version' => MQSERIES_MQMD_VERSION_1,
         'Expiry' => MQSERIES_MQEI_UNLIMITED,
         'Report' => MQSERIES_MQRO_NONE,
@@ -15,8 +15,9 @@ class MQMessage
         'Persistence' => MQSERIES_MQPER_PERSISTENT,
         'MsgId' => false
     ];
+	protected $RFHeaders = [];
 
-    private $propetiesList = [
+    protected $propetiesList = [
         //TODO Describe all properties and MD versions
     ];
 
@@ -33,17 +34,17 @@ class MQMessage
     // https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.ref.dev.doc/q097390_.htm
     public function property($name, $value=null)
     {
-        if(is_null($value)) {
-            if(!isset($this->MQMD[$name])) return false;
-
+        if(null === $value) {
+			if(!isset($this->MQMD[$name])) return null;
             if(
-                gettype($this->MQMD[$name]) === 'resource'
-                && get_resource_type($this->MQMD[$name]) == 'mqseries_bytes'
+                \is_resource($this->MQMD[$name])
+                && get_resource_type($this->MQMD[$name]) === 'mqseries_bytes'
             ) return mqseries_bytes_val($this->MQMD[$name]);
 
             return $this->MQMD[$name];
         }
         $this->setPropsArray([$name => $value]);
+        return $value;
     }
 
     public function setPropsArray(array $props)
@@ -55,7 +56,32 @@ class MQMessage
         }
     }
 
-    public function getPropsArray() {
-        return $this->MQMD;
+    public function getAllProps(): array {
+		return $this->MQMD;
+	}
+
+    /** @deprecated  */
+    public function getPropsArray(): array {
+        return $this->getAllProps();
     }
+
+    public function header($name, $value=null) {
+		if(null === $value) {
+			if(!isset($this->RFHeaders[$name])) return null;
+			return $this->RFHeaders[$name];
+		}
+
+		#array_filter();
+		$this->RFHeaders[$name] = $value;
+		return $value;
+	}
+
+	public function getAllHeaders(): array {
+    	return $this->RFHeaders;
+	}
+
+	public function hasHeaders(): bool {
+    	if(\count($this->RFHeaders)) return true;
+    	return false;
+	}
 }

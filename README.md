@@ -1,7 +1,7 @@
 # IBM MQ - PHP библиотека для взаимодействия с IBM WebSphere MQ
 
 ## Установка
-Для работы требуется доработанное для PHP7 [pecl расширение mqseries](https://github.com/adoy/pecl-networking-mqseries/tree/PHP7).
+Для работы требуется доработанное для PHP7 [pecl расширение mqseries](https://github.com/rstmpw/pecl-networking-mqseries/archive/php7-mqmh.tar.gz).
 
 ```bash
 composer require rstmpw/ibmmq
@@ -201,4 +201,4 @@ $mqServer->commit();
 ## Зависимости
 
 - Библиотека работает с PHP 7.0 и выше.
-- Для работы требуется доработанное [pecl расширение mqseries](https://github.com/adoy/pecl-networking-mqseries/tree/PHP7).
+- Для работы требуется доработанное [pecl расширение mqseries](https://github.com/rstmpw/pecl-networking-mqseries/archive/php7-mqmh.tar.gz).

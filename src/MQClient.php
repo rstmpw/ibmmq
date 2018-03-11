@@ -3,31 +3,50 @@
 namespace rstmpw\ibmmq;
 
 use \RuntimeException;
+use \InvalidArgumentException;
 
 class MQClient {
-    private static $defQueueOpenOpts = [
+    protected static $defQueueOpenOpts = [
         MQSERIES_MQOO_INPUT_AS_Q_DEF,
         MQSERIES_MQOO_FAIL_IF_QUIESCING,
         MQSERIES_MQOO_OUTPUT,
         MQSERIES_MQOO_INQUIRE
     ];
-    private static $defTopicOpts = [
+    protected static $defTopicOpts = [
         MQSERIES_MQOO_OUTPUT,
         MQSERIES_MQOO_FAIL_IF_QUIESCING
     ];
 
-    private $connHandle = null;
-    private $connOpts = null;
-    private $openedObjects = [];
-    private $inTransaction = false;
+    protected static $defCrtMsgHandleOpts = [
+		'Version' => MQSERIES_MQCMHO_VERSION_1,
+		'Options' => MQSERIES_MQCMHO_VALIDATE
+	];
 
-    public function __get($name)
-    {
-        if(isset($this->{$name})) return $this->{$name};
-        return null;
-    }
+    protected static $defDelMsgHandleOpts = [
+		'Version' => MQSERIES_MQDMHO_VERSION_1,
+		'Options' => MQSERIES_MQDMHO_NONE
+	];
 
-    public static function makeConnOpts ($QMName, $ServerAddr, $ServerPort='1414', $ChannelName='SYSTEM.ADMIN.SVRCONN')
+    protected static $defSetMsgPropOpts = [
+		'Version' => MQSERIES_MQSMPO_VERSION_1,
+		'Options' => MQSERIES_MQSMPO_SET_FIRST
+	];
+
+    protected static $defMsgPropDscr = [
+		'Version' => MQSERIES_MQPD_VERSION_1,
+		'Options' => MQSERIES_MQPD_NONE,
+		// 'Support' => MQSERIES_MQPD_SUPPORT_OPTIONAL,
+		// 'Context' => MQSERIES_MQPD_NO_CONTEXT,
+		// 'CopyOptions' => MQSERIES_MQCOPY_FORWARD
+	];
+
+    protected $connHandle;
+    protected $connOpts;
+    protected $openedObjects = [];
+    protected $inTransaction = false;
+
+
+    public static function makeConnOpts ($QMName, $ServerAddr, $ServerPort='1414', $ChannelName='SYSTEM.ADMIN.SVRCONN', $MaxMsgLength=4194304) :array
     {
       return [
           'QMName'=> $QMName,
@@ -37,7 +56,9 @@ class MQClient {
               'MQCD' => [
                   'ChannelName' => $ChannelName,
                   'ConnectionName' => "$ServerAddr($ServerPort)",
-                  'TransportType' => MQSERIES_MQXPT_TCP
+                  'TransportType' => MQSERIES_MQXPT_TCP,
+				  'MaxMsgLength' => $MaxMsgLength,
+				  'DiscInterval' => 0
               ]
           ]
       ];
@@ -53,14 +74,18 @@ class MQClient {
             $CC,
             $RC
         );
-
         if ($CC !== MQSERIES_MQCC_OK) {
             //TODO Log errors
             throw new RuntimeException(mqseries_strerror($RC), $RC);
         }
-
         $this->connOpts=$ConnOpts;
     }
+
+	public function __get($name)
+	{
+		if(isset($this->{$name})) return $this->{$name};
+		return null;
+	}
 
     public function __destruct()
     {
@@ -81,8 +106,8 @@ class MQClient {
         //TODO Log warning if MQCC != OK
     }
 
-    public function openQueue($QName, array $OpenOpts=null) {
-        if(!$OpenOpts) $OpenOpts = self::$defQueueOpenOpts;
+    public function openQueue(string $QName, array $OpenOpts=null) :MQObject {
+        if(null === $OpenOpts) $OpenOpts = self::$defQueueOpenOpts;
 
         $openParams = [
             'MQOD'=> [
@@ -97,8 +122,8 @@ class MQClient {
         return $obj;
     }
 
-    public function openTopic($TopicName, array $OpenOpts=null) {
-        if(!$OpenOpts) $OpenOpts = self::$defTopicOpts;
+    public function openTopic($TopicName, array $OpenOpts=null):MQObject {
+        if(null === $OpenOpts) $OpenOpts = self::$defTopicOpts;
 
         $openParams = [
             'MQOD'=> [
@@ -121,7 +146,7 @@ class MQClient {
             'Options'=> self::$defTopicOpts
         ];
 
-        if(substr($objName, 0, 7) === 'TOPIC::') { //pub to topic
+        if(0 === strpos($objName, 'TOPIC::')) { //pub to topic
             $openParams['MQOD'] = [
                     'Version' => MQSERIES_MQOD_VERSION_4,
                     'ObjectType' => MQSERIES_MQOT_TOPIC,
@@ -136,20 +161,35 @@ class MQClient {
 
         if( $MQMessage->property('MsgId') === false && !(
                 isset($putParams['Options']) &&
-                array_search(MQSERIES_MQPMO_NEW_MSG_ID, $putParams['Options'])
+                \in_array(MQSERIES_MQPMO_NEW_MSG_ID, $putParams['Options'], true)
             )
         )
             $putParams['Options'][] = MQSERIES_MQPMO_NEW_MSG_ID;
 
         if( $this->inTransaction && !(
                 isset($putParams['Options']) &&
-                array_search(MQSERIES_MQGMO_SYNCPOINT, $putParams['Options'])
+                \in_array(MQSERIES_MQGMO_SYNCPOINT, $putParams['Options'], true)
             )
         ) {
             $putParams['Options'][] = MQSERIES_MQGMO_SYNCPOINT;
         }
 
-        $MQMD = $MQMessage->getPropsArray();
+
+		if($MQMessage->hasHeaders()) {
+			$msgHandle = $this->createMsgHandle();
+			foreach($MQMessage->getAllHeaders() as $HName => $HValue) {
+				$this->setMsgProp($msgHandle, $HName, $HValue);
+			}
+
+			if(!isset($putParams['Version']) || $putParams['Version'] < MQSERIES_MQPMO_VERSION_3)
+				$putParams['Version'] = MQSERIES_MQPMO_VERSION_3;
+
+			$putParams['NewMsgHandle'] = $msgHandle;
+			$putParams['Action'] = MQSERIES_MQACTP_NEW;
+		}
+
+
+        $MQMD = $MQMessage->getAllProps();
         $putParams['Options'] = array_reduce($putParams['Options'], function($res, $cur) { return $res | $cur; }, 0);
 
         $CC = $RC = null;
@@ -167,7 +207,9 @@ class MQClient {
             throw new RuntimeException(mqseries_strerror($RC), $RC);
         }
 
-        $MQMessage->setPropsArray($MQMD);
+		if(null !== $msgHandle) $this->deleteMsgHandle($msgHandle);
+
+		$MQMessage->setPropsArray($MQMD);
         return $this;
     }
 
@@ -192,7 +234,6 @@ class MQClient {
             //TODO Log errors
             throw new RuntimeException(mqseries_strerror($RC), $RC);
         }
-        //TODO Log warning if MQCC != OK
         $this->inTransaction = false;
     }
 
@@ -210,7 +251,83 @@ class MQClient {
             //TODO Log errors
             throw new RuntimeException(mqseries_strerror($RC), $RC);
         }
-        //TODO Log warning if MQCC != OK
         $this->inTransaction = false;
     }
+
+
+	public function createMsgHandle(array $mqcmho = null) {
+		if(null === $mqcmho) $mqcmho = self::$defCrtMsgHandleOpts;
+
+		$msgHandle = $CC = $RC = null;
+		mqseries_crtmh(
+			$this->connHandle,
+			$mqcmho,
+			$msgHandle,
+			$CC,
+			$RC
+		);
+		if ($CC !== MQSERIES_MQCC_OK) {
+			//TODO Log errors
+			throw new RuntimeException(mqseries_strerror($RC), $RC);
+		}
+		return $msgHandle;
+	}
+
+	public function deleteMsgHandle($msgHandle, array $mqdmho = null) {
+		if(null === $mqdmho) $mqdmho = self::$defDelMsgHandleOpts;
+
+		$CC = $RC = null;
+		mqseries_dltmh(
+			$this->connHandle,
+			$msgHandle,
+			$mqdmho,
+			$CC,
+			$RC
+		);
+		if ($CC !== MQSERIES_MQCC_OK) {
+			//TODO Log errors
+			throw new RuntimeException(mqseries_strerror($RC), $RC);
+		}
+    }
+
+    public function setMsgProp($msgHandle, string $name, $value, array $mqpd = null, array $mqsmpo = null) {
+		if(null === $mqsmpo) $mqsmpo = self::$defSetMsgPropOpts;
+		if(null === $mqpd) $mqpd = self::$defMsgPropDscr;
+
+		switch(\gettype($value)) {
+			case 'string':
+				$valType = MQSERIES_MQTYPE_STRING;
+				break;
+			case 'integer':
+				$valType = MQSERIES_MQTYPE_INT32;
+				break;
+			case 'boolean':
+				$valType = MQSERIES_MQTYPE_BOOLEAN;
+				break;
+			case 'double':
+				$valType = MQSERIES_MQTYPE_FLOAT32;
+				break;
+			default:
+				throw new InvalidArgumentException('Value of message header must be a scalar type');
+		}
+
+
+		$CC = $RC = null;
+		mqseries_setmp(
+			$this->connHandle,
+			$msgHandle,
+			$mqsmpo,
+			$name,
+			$mqpd,
+			$valType,
+			$value,
+			$CC,
+			$RC
+		);
+		if ($CC !== MQSERIES_MQCC_OK) {
+			//TODO Log errors
+			throw new RuntimeException(mqseries_strerror($RC), $RC);
+		}
+	}
+
 }
