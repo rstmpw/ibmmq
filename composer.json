@@ -14,7 +14,7 @@
     "php": "^7.0"
   },
   "suggest": {
-    "ext-mqseries": "To actually use this library, you'll have to install the PECL extension mqseries"
+    "ext-mqseries": "To actually use this library, you'll have to install the custom version of extension mqseries"
   },
   "autoload": {
     "psr-4": {
