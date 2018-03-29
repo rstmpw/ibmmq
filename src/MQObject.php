@@ -115,7 +115,9 @@ class MQObject {
 
     public function put(MQMessage $MQMessage, array $putParams=[])
     {
-        if( $MQMessage->property('MsgId') === false && !(
+    	$msgHandle = null;
+
+        if($MQMessage->property('MsgId') === false && !(
                 isset($putParams['Options']) &&
                 \in_array(MQSERIES_MQPMO_NEW_MSG_ID, $putParams['Options'], true)
             )
