@@ -115,8 +115,6 @@ class MQObject {
 
     public function put(MQMessage $MQMessage, array $putParams=[])
     {
-    	$msgHandle = null;
-
         if($MQMessage->property('MsgId') === false && !(
                 isset($putParams['Options']) &&
                 \in_array(MQSERIES_MQPMO_NEW_MSG_ID, $putParams['Options'], true)
@@ -132,6 +130,7 @@ class MQObject {
             $putParams['Options'][] = MQSERIES_MQGMO_SYNCPOINT;
         }
 
+		$msgHandle = null;
 		if($MQMessage->hasHeaders()) {
 			$msgHandle = $this->MQClient->createMsgHandle();
 			foreach($MQMessage->getAllHeaders() as $HName => $HValue) {
@@ -219,7 +218,7 @@ class MQObject {
         	$Message->header($header[0], $header[1]);
 		}
 
-		if(null !== $msgHandle) $this->MQClient->deleteMsgHandle($msgHandle);
+		$this->MQClient->deleteMsgHandle($msgHandle);
         return $Message;
     }
 

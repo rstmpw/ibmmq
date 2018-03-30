@@ -174,7 +174,7 @@ class MQClient {
             $putParams['Options'][] = MQSERIES_MQGMO_SYNCPOINT;
         }
 
-
+		$msgHandle = null;
 		if($MQMessage->hasHeaders()) {
 			$msgHandle = $this->createMsgHandle();
 			foreach($MQMessage->getAllHeaders() as $HName => $HValue) {
