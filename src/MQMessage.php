@@ -26,7 +26,13 @@ class MQMessage
         $this->messageData=$data;
     }
 
-    public function data()
+    public function __destruct() {
+		$this->messageData = null;
+		$this->MQMD = null;
+		$this->RFHeaders = null;
+	}
+
+	public function data()
     {
         return $this->messageData;
     }
