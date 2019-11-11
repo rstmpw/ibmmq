@@ -77,7 +77,7 @@ $mqServer = new MQClient($mqConnOpts);
 // Создаем сообщение
 $outMessage = new MQMessage('Somebody message '.time());
 
-$mqServer->put1($outMessage, 'QM.REMOTE::QUEUE.NAME');
+$mqServer->put1($outMessage, 'QM.REMOT//QUEUE.NAME');
 echo "\n msgId: ".$outMessage->property('MsgId');
 ```
 
