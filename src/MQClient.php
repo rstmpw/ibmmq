@@ -140,6 +140,7 @@ class MQClient {
     }
 
     // To put message to topic use 'TOPIC::Any/Topic/String' for objName params
+    // To put message to another QM use 'QMName//QueueName'	
     public function put1(MQMessage $MQMessage, $objName, array $putParams=[]) {
         $openParams = [
             'MQOD'=> [],
@@ -153,9 +154,18 @@ class MQClient {
                     'ObjectString' => substr($objName, 7)
             ];
         } else { //put to queue
+	    $QMgrName = $this->connOpts['QMName'];
+	    $QName = $objName;	
+		
+	    $explode = explode("//", $objName);
+	    if(count($explode)==2 && strlen($explode[0]) && strlen($explode[1])) {
+    		$QMgrName = $explode[0];
+	        $QName = $explode[1];
+	    } 
+		
             $openParams['MQOD'] = [
-                    'ObjectQMgrName' => $this->connOpts['QMName'],
-                    'ObjectName' => $objName
+                    'ObjectQMgrName' => $QMgrName,
+                    'ObjectName' => $QName
             ];
         }
 
