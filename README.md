@@ -64,6 +64,23 @@ $mqServer->put1($outMessage, 'QUEUE.NAME');
 echo "\n msgId: ".$outMessage->property('MsgId');
 ```
 
+### Отправка сообщений в другой менеждер очередей
+Ваш QM должен знать как отправлять сообщения в другой менеджер (через выделенные удаленную или транспортную очередь)
+```php
+<?php
+use rstmpw\ibmmq\MQClient;
+use rstmpw\ibmmq\MQMessage;
+
+$mqConnOpts = MQClient::makeConnOpts('QM.NAME', '172.18.0.7', '1414');
+$mqServer = new MQClient($mqConnOpts);
+
+// Создаем сообщение
+$outMessage = new MQMessage('Somebody message '.time());
+
+$mqServer->put1($outMessage, 'QM.REMOTE::QUEUE.NAME');
+echo "\n msgId: ".$outMessage->property('MsgId');
+```
+
 ### Получение сообщений из очереди с ожиданием и выборкой по CorrelId
 ```php
 <?php
