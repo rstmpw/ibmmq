@@ -168,7 +168,7 @@ class MQObject {
         return $this;
     }
 
-    public function get(array $getParams = null, array $MQMD = [])
+    public function get(array $getParams = null, array $MQMD = ['Version' => MQSERIES_MQMD_VERSION_2])
     {
     	if(null === $getParams) $getParams = self::$defGetMsgOpts;
 
